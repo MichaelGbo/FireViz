@@ -1,0 +1,2802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FireViz - Interactive Firewall Education</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;500;700;900&display=swap');
+        
+        :root {
+            --bg-dark: #0a0e27;
+            --bg-card: #141b3d;
+            --accent-primary: #00ffff;
+            --accent-secondary: #ff6b35;
+            --accent-success: #00ff88;
+            --accent-danger: #ff3366;
+            --text-primary: #e8edf5;
+            --text-secondary: #8b95b0;
+            --border-color: #1e2949;
+            --glow-cyan: rgba(0, 255, 255, 0.3);
+            --glow-orange: rgba(255, 107, 53, 0.3);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        
+        /* Animated background grid */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(var(--border-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.3;
+            z-index: -1;
+            animation: gridMove 20s linear infinite;
+        }
+        
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--bg-card) 0%, #1a2347 100%);
+            padding: 2rem 0;
+            border-bottom: 2px solid var(--accent-primary);
+            box-shadow: 0 10px 40px rgba(0, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 900;
+            box-shadow: 0 0 20px var(--glow-cyan);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 20px var(--glow-cyan); }
+            50% { transform: scale(1.05); box-shadow: 0 0 30px var(--glow-cyan); }
+        }
+        
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--accent-primary), #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        nav {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        nav button {
+            background: transparent;
+            border: 2px solid var(--accent-primary);
+            color: var(--accent-primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+        
+        nav button:hover {
+            background: var(--accent-primary);
+            color: var(--bg-dark);
+            box-shadow: 0 0 20px var(--glow-cyan);
+            transform: translateY(-2px);
+        }
+        
+        nav button.active {
+            background: var(--accent-primary);
+            color: var(--bg-dark);
+        }
+        
+        /* Main container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+        
+        /* Section styling */
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Hero section */
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            margin-bottom: 3rem;
+        }
+        
+        .hero h2 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+        
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 10px 40px rgba(0, 255, 255, 0.2);
+            transform: translateY(-5px);
+        }
+        
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--accent-primary);
+            font-weight: 700;
+        }
+        
+        .card p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        
+        .card ul {
+            list-style: none;
+            margin-top: 1rem;
+        }
+        
+        .card li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--text-secondary);
+        }
+        
+        .card li::before {
+            content: '▹';
+            position: absolute;
+            left: 0;
+            color: var(--accent-primary);
+            font-weight: bold;
+        }
+        
+        /* Simulation area */
+        .simulation-container {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .simulation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .simulation-header h3 {
+            font-size: 2rem;
+            color: var(--accent-primary);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), #0088ff);
+            color: var(--bg-dark);
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.5);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-dark);
+            color: var(--accent-primary);
+            border: 2px solid var(--accent-primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--accent-primary);
+            color: var(--bg-dark);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--accent-danger), #cc0033);
+            color: white;
+        }
+        
+        /* Firewall visualization */
+        .firewall-viz {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 3rem;
+            align-items: center;
+            margin: 3rem 0;
+            min-height: 400px;
+        }
+        
+        /* Flow diagram */
+        .flow-diagram-container {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 3rem 0;
+            position: relative;
+        }
+        
+        #flowDiagram {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .animated-packet {
+            animation: packetFlow 3s ease-in-out;
+        }
+        
+        @keyframes packetFlow {
+            0% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            45% {
+                transform: translateX(330px);
+                opacity: 1;
+            }
+            55% {
+                transform: translateX(330px);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(630px);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes packetFlowBlocked {
+            0% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            45% {
+                transform: translateX(330px);
+                opacity: 1;
+            }
+            55% {
+                transform: translateX(330px);
+                opacity: 0.5;
+            }
+            70% {
+                transform: translateX(330px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(330px);
+                opacity: 0;
+            }
+        }
+        
+        .packet-icon {
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+        
+        .network-zone {
+            background: rgba(0, 255, 255, 0.05);
+            border: 2px dashed var(--accent-primary);
+            border-radius: 16px;
+            padding: 2rem;
+            min-height: 300px;
+            position: relative;
+        }
+        
+        .network-zone h4 {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-primary);
+            text-align: center;
+        }
+        
+        .firewall-box {
+            background: linear-gradient(135deg, var(--bg-card), #1e2949);
+            border: 3px solid var(--accent-secondary);
+            border-radius: 16px;
+            padding: 2rem;
+            min-width: 250px;
+            box-shadow: 0 0 40px var(--glow-orange);
+            position: relative;
+        }
+        
+        .firewall-box h4 {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--accent-secondary);
+        }
+        
+        .firewall-icon {
+            font-size: 3rem;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        /* Packets */
+        .packet-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .packet {
+            background: var(--bg-dark);
+            border: 2px solid var(--accent-primary);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            position: relative;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        .packet.blocked {
+            border-color: var(--accent-danger);
+            background: rgba(255, 51, 102, 0.1);
+        }
+        
+        .packet.allowed {
+            border-color: var(--accent-success);
+            background: rgba(0, 255, 136, 0.1);
+        }
+        
+        .packet-status {
+            position: absolute;
+            top: -12px;
+            right: 10px;
+            background: var(--bg-card);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .packet-status.blocked {
+            color: var(--accent-danger);
+            border: 1px solid var(--accent-danger);
+        }
+        
+        .packet-status.allowed {
+            color: var(--accent-success);
+            border: 1px solid var(--accent-success);
+        }
+        
+        /* Rules editor */
+        .rules-editor {
+            background: var(--bg-dark);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .rule-item {
+            background: var(--bg-card);
+            border-left: 4px solid var(--accent-primary);
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .rule-item:hover {
+            background: #1a2347;
+            border-left-color: var(--accent-secondary);
+            transform: translateX(5px);
+        }
+        
+        .rule-item.deny {
+            border-left-color: var(--accent-danger);
+        }
+        
+        .rule-text {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            flex: 1;
+        }
+        
+        .rule-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .rule-action {
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .rule-action.allow {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--accent-success);
+        }
+        
+        .rule-action.deny {
+            background: rgba(255, 51, 102, 0.2);
+            color: var(--accent-danger);
+        }
+        
+        .rule-btn {
+            background: var(--bg-dark);
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .rule-btn:hover {
+            border-color: var(--accent-primary);
+            transform: scale(1.1);
+        }
+        
+        .edit-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+        }
+        
+        .delete-btn:hover {
+            background: rgba(255, 51, 102, 0.2);
+            border-color: var(--accent-danger);
+        }
+        
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--bg-card);
+            border: 2px solid var(--accent-primary);
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 255, 255, 0.4);
+            animation: modalSlideIn 0.3s ease;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            color: var(--accent-primary);
+            margin: 0;
+        }
+        
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .modal-close:hover {
+            background: rgba(255, 51, 102, 0.2);
+            color: var(--accent-danger);
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            padding: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            color: var(--accent-primary);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .modal-select {
+            width: 100%;
+            background: linear-gradient(135deg, var(--bg-dark), #0d1228);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            appearance: none;
+            background-image: 
+                linear-gradient(135deg, var(--bg-dark), #0d1228),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300ffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat, no-repeat;
+            background-position: left center, right 0.75rem center;
+            background-size: auto, 12px;
+            padding-right: 2.5rem;
+        }
+        
+        .modal-select:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+        }
+        
+        .modal-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 20px var(--glow-cyan);
+        }
+        
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 2px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+        
+        /* Logs */
+        .log-container {
+            background: var(--bg-dark);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+        
+        .log-entry {
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            border-radius: 4px;
+            animation: logSlide 0.3s ease;
+        }
+        
+        @keyframes logSlide {
+            from { transform: translateX(-10px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .log-entry.allowed {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--accent-success);
+        }
+        
+        .log-entry.blocked {
+            background: rgba(255, 51, 102, 0.1);
+            color: var(--accent-danger);
+        }
+        
+        .timestamp {
+            color: var(--text-secondary);
+            margin-right: 1rem;
+        }
+        
+        /* Glossary */
+        .glossary-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        
+        .glossary-item {
+            background: var(--bg-card);
+            border-left: 4px solid var(--accent-primary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .glossary-item:hover {
+            border-left-color: var(--accent-secondary);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.1);
+        }
+        
+        .glossary-term {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .glossary-definition {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        
+        /* Packet config */
+        .packet-config {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        /* VLAN Information */
+        .vlan-info-container {
+            background: var(--bg-dark);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .vlan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .vlan-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .vlan-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .vlan-card.vlan-10::before { background: #ff6b35; }
+        .vlan-card.vlan-20::before { background: #00ffff; }
+        .vlan-card.vlan-30::before { background: #00ff88; }
+        .vlan-card.vlan-40::before { background: #ffd700; }
+        .vlan-card.vlan-99::before { background: #ff3366; }
+        
+        .vlan-card:hover {
+            transform: translateX(5px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.2);
+        }
+        
+        .vlan-card.active {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+        }
+        
+        .vlan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        
+        .vlan-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--accent-primary);
+        }
+        
+        .vlan-badge {
+            background: var(--accent-primary);
+            color: var(--bg-dark);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .vlan-card.vlan-10 .vlan-badge { background: #ff6b35; }
+        .vlan-card.vlan-20 .vlan-badge { background: #00ffff; }
+        .vlan-card.vlan-30 .vlan-badge { background: #00ff88; }
+        .vlan-card.vlan-40 .vlan-badge { background: #ffd700; color: var(--bg-dark); }
+        .vlan-card.vlan-99 .vlan-badge { background: #ff3366; }
+        
+        .vlan-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+        
+        .vlan-subnet {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            padding: 0.25rem 0.5rem;
+            background: var(--bg-dark);
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        /* IP Address Explanation Styling */
+        .ip-explanation-container {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .explanation-card {
+            background: var(--bg-dark);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .explanation-header {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .explanation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .ip-example {
+            background: var(--bg-card);
+            border: 2px solid var(--accent-primary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .ip-visual {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .ip-part {
+            background: var(--accent-primary);
+            color: var(--bg-dark);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.5rem;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            min-width: 70px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 255, 255, 0.3);
+        }
+        
+        .ip-dot {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+        
+        .ip-description {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .ip-desc-item {
+            background: var(--bg-dark);
+            padding: 0.75rem;
+            border-left: 4px solid var(--accent-secondary);
+            border-radius: 4px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .example-box {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .example-title {
+            font-weight: 700;
+            color: var(--accent-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+        
+        .example-content {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.8;
+            color: var(--text-primary);
+        }
+        
+        .scenario-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .scenario-box {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .scenario-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.2);
+        }
+        
+        .scenario-allowed {
+            background: rgba(0, 255, 136, 0.05);
+            border-color: var(--accent-success);
+        }
+        
+        .scenario-blocked {
+            background: rgba(255, 51, 102, 0.05);
+            border-color: var(--accent-danger);
+        }
+        
+        .scenario-header {
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .scenario-allowed .scenario-header {
+            color: var(--accent-success);
+        }
+        
+        .scenario-blocked .scenario-header {
+            color: var(--accent-danger);
+        }
+        
+        .scenario-content {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+        
+        .scenario-content > div {
+            margin: 0.25rem 0;
+            color: var(--text-secondary);
+        }
+        
+        .config-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .config-group label {
+            font-weight: 600;
+            color: var(--accent-primary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .config-group select,
+        .config-group input {
+            background: linear-gradient(135deg, var(--bg-dark), #0d1228);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .config-group select {
+            appearance: none;
+            background-image: 
+                linear-gradient(135deg, var(--bg-dark), #0d1228),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300ffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat, no-repeat;
+            background-position: left center, right 0.75rem center;
+            background-size: auto, 12px;
+            padding-right: 2.5rem;
+        }
+        
+        .config-group select:hover,
+        .config-group input:hover {
+            border-color: var(--accent-primary);
+            background: linear-gradient(135deg, #0d1228, var(--bg-dark));
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+        }
+        
+        .config-group select:focus,
+        .config-group input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 20px var(--glow-cyan);
+            background: var(--bg-dark);
+        }
+        
+        /* Style the dropdown options */
+        .config-group select option {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .config-group select option:hover {
+            background: var(--bg-dark);
+            color: var(--accent-primary);
+        }
+        
+        /* Custom scrollbar for select dropdowns */
+        .config-group select::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .config-group select::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        
+        .config-group select::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 4px;
+        }
+        
+        /* Input placeholder styling */
+        .config-group input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+        
+        .config-group input:focus::placeholder {
+            opacity: 0.8;
+            color: var(--accent-primary);
+        }
+        
+        .tooltip-wrapper select,
+        .tooltip-wrapper input {
+            background: linear-gradient(135deg, var(--bg-dark), #0d1228);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            cursor: pointer;
+        }
+        
+        .tooltip-wrapper select {
+            appearance: none;
+            background-image: 
+                linear-gradient(135deg, var(--bg-dark), #0d1228),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300ffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat, no-repeat;
+            background-position: left center, right 0.75rem center;
+            background-size: auto, 12px;
+            padding-right: 2.5rem;
+        }
+        
+        .tooltip-wrapper select:hover,
+        .tooltip-wrapper input:hover {
+            border-color: var(--accent-primary);
+            background: linear-gradient(135deg, #0d1228, var(--bg-dark));
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .tooltip-wrapper select:focus,
+        .tooltip-wrapper input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 20px var(--glow-cyan);
+            background: var(--bg-dark);
+        }
+        
+        .tooltip-wrapper select option {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tooltip-wrapper input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+        
+        .tooltip-wrapper input:focus::placeholder {
+            opacity: 0.8;
+            color: var(--accent-primary);
+        }
+        
+        /* Tooltip styling */
+        .tooltip-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .tooltip-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: var(--accent-primary);
+            color: var(--bg-dark);
+            border-radius: 50%;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: help;
+            transition: all 0.3s ease;
+        }
+        
+        .info-icon:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px var(--glow-cyan);
+        }
+        
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background: var(--bg-card);
+            border: 2px solid var(--accent-primary);
+            border-radius: 8px;
+            padding: 1rem;
+            min-width: 300px;
+            max-width: 400px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
+            pointer-events: none;
+        }
+        
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 20px;
+            border: 8px solid transparent;
+            border-top-color: var(--accent-primary);
+        }
+        
+        .tooltip-wrapper:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-10px);
+        }
+        
+        .tooltip-title {
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+        
+        .tooltip-content {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        
+        .tooltip-example {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: var(--bg-dark);
+            border-left: 3px solid var(--accent-secondary);
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-primary);
+        }
+        
+        /* Step indicator */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active .step-number {
+            background: var(--accent-primary);
+            color: var(--bg-dark);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 20px var(--glow-cyan);
+        }
+        
+        .step-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .step.active .step-label {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-secondary);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8rem; }
+            .hero h2 { font-size: 2.5rem; }
+            .firewall-viz {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🔥</div>
+                <h1>FireViz</h1>
+            </div>
+            <nav>
+                <button onclick="showSection('home')" class="active">Home</button>
+                <button onclick="showSection('learn')">Learn</button>
+                <button onclick="showSection('simulate')">Simulate</button>
+                <button onclick="showSection('glossary')">Glossary</button>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- HOME SECTION -->
+        <section id="home" class="section active">
+            <div class="hero">
+                <h2>Master Firewall Concepts<br>Through Interactive Simulation</h2>
+                <p>FireViz is an educational platform designed to help students understand how firewalls protect networks. Explore packet filtering, rule evaluation, and network security through hands-on visualization.</p>
+            </div>
+            
+            <div class="card-grid">
+                <div class="card">
+                    <h3>🎓 Learn the Basics</h3>
+                    <p>Understand firewall fundamentals, from packet filtering to rule processing. Start with core concepts and build your knowledge step by step.</p>
+                </div>
+                
+                <div class="card">
+                    <h3>🔬 Interactive Simulation</h3>
+                    <p>Watch packets travel through a virtual firewall in real-time. See how rules are applied and understand why traffic is allowed or blocked.</p>
+                </div>
+                
+                <div class="card">
+                    <h3>📊 Visual Learning</h3>
+                    <p>Color-coded visualizations and step-by-step animations make complex security concepts easy to understand and remember.</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>Why FireViz?</h3>
+                <p>Students at Tennessee State University rely on campus Wi-Fi daily, but many don't understand how network security protects their data. FireViz bridges the gap between theory and practice by providing:</p>
+                <ul>
+                    <li>Safe, virtual environment to experiment with firewall rules</li>
+                    <li>Real-time visualization of packet flow and filtering decisions</li>
+                    <li>Interactive dashboard for hands-on learning</li>
+                    <li>Educational explanations of key security concepts</li>
+                    <li>Traffic logs to understand firewall behavior</li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- LEARN SECTION -->
+        <section id="learn" class="section">
+            <div class="hero">
+                <h2>How Firewalls Work</h2>
+                <p>Learn the fundamentals of network security and firewall operations</p>
+            </div>
+            
+            <div class="card">
+                <h3>🛡️ What is a Firewall?</h3>
+                <p>A firewall is a network security system that monitors and controls incoming and outgoing network traffic based on predetermined security rules. Think of it as a security guard at a building entrance who checks everyone's identification before allowing them to enter or exit.</p>
+            </div>
+            
+            <div class="card-grid">
+                <div class="card">
+                    <h3>How Firewalls Process Traffic</h3>
+                    <p><strong>Step 1: Traffic Arrival</strong></p>
+                    <p>A data packet arrives at the firewall from either an internal or external source.</p>
+                    
+                    <p style="margin-top: 1rem;"><strong>Step 2: Rule Inspection</strong></p>
+                    <p>The firewall examines the packet's information (source IP, destination IP, port number, protocol) against its ruleset.</p>
+                    
+                    <p style="margin-top: 1rem;"><strong>Step 3: Decision Making</strong></p>
+                    <p>Based on the rules, the firewall decides to allow, block, or alert administrators.</p>
+                    
+                    <p style="margin-top: 1rem;"><strong>Step 4: Logging</strong></p>
+                    <p>The firewall records the action taken for future analysis and auditing.</p>
+                </div>
+                
+                <div class="card">
+                    <h3>Types of Firewall Rules</h3>
+                    <p><strong>Packet Filtering</strong></p>
+                    <p>Examines packets based on IP addresses, ports, and protocols. Fast but basic protection.</p>
+                    
+                    <p style="margin-top: 1rem;"><strong>Stateful Inspection</strong></p>
+                    <p>Tracks the state of active connections and makes context-aware decisions.</p>
+                    
+                    <p style="margin-top: 1rem;"><strong>Application Layer</strong></p>
+                    <p>Inspects actual content and application data for deeper protection.</p>
+                </div>
+            </div>
+            
+            <div class="card-grid">
+                <div class="card">
+                    <h3>✅ Benefits</h3>
+                    <ul>
+                        <li>24/7 network monitoring</li>
+                        <li>Blocks unauthorized access</li>
+                        <li>Prevents malware and ransomware</li>
+                        <li>Filters malicious websites</li>
+                        <li>Logs traffic for analysis</li>
+                        <li>Enhances network privacy</li>
+                    </ul>
+                </div>
+                
+                <div class="card">
+                    <h3>⚠️ Limitations</h3>
+                    <ul>
+                        <li>Can create performance bottlenecks</li>
+                        <li>Difficulty with encrypted traffic</li>
+                        <li>Risk of misconfiguration</li>
+                        <li>Cannot protect against insider threats</li>
+                        <li>May block legitimate applications</li>
+                        <li>Requires regular maintenance</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>🔷 VLANs and Network Segmentation</h3>
+                <p>Virtual Local Area Networks (VLANs) are a crucial network security concept that work hand-in-hand with firewalls. A VLAN logically divides a physical network into multiple isolated segments, even if devices share the same physical infrastructure.</p>
+                
+                <p style="margin-top: 1rem;"><strong>Why Use VLANs?</strong></p>
+                <ul>
+                    <li><strong>Security Isolation:</strong> Separate sensitive data from general traffic (e.g., keep financial records away from guest Wi-Fi)</li>
+                    <li><strong>Access Control:</strong> Restrict which users can access which resources (e.g., students can't access faculty files)</li>
+                    <li><strong>Broadcast Containment:</strong> Limit network broadcasts to specific segments, improving performance</li>
+                    <li><strong>Simplified Management:</strong> Group devices by function rather than physical location</li>
+                </ul>
+                
+                <p style="margin-top: 1rem;"><strong>Common VLAN Examples in a University:</strong></p>
+                <ul>
+                    <li><strong>VLAN 10 - Guest Network:</strong> Limited access, internet only, no internal resources</li>
+                    <li><strong>VLAN 20 - Student Network:</strong> Standard access to educational resources and internet</li>
+                    <li><strong>VLAN 30 - Faculty Network:</strong> Elevated access to administrative systems and sensitive data</li>
+                    <li><strong>VLAN 40 - Server Network:</strong> Isolated servers with strict access controls</li>
+                    <li><strong>VLAN 99 - External/Internet:</strong> Connection to the outside world</li>
+                </ul>
+                
+                <p style="margin-top: 1rem;"><strong>How Firewalls Control VLAN Traffic:</strong></p>
+                <p>Firewalls sit between VLANs and enforce security policies. For example, a firewall might allow students (VLAN 20) to access web servers (VLAN 40) via HTTP/HTTPS, but block them from SSH access. Meanwhile, faculty (VLAN 30) might have unrestricted access to all server resources. This is called inter-VLAN routing with access control lists (ACLs).</p>
+            </div>
+            
+            <div class="card">
+                <h3>🎯 Real-World Scenarios</h3>
+                <p><strong>Scenario 1: Malicious Download</strong></p>
+                <p>A student clicks an email attachment containing malware. The firewall detects the connection to a known malicious server and blocks the download, protecting the device.</p>
+                
+                <p style="margin-top: 1.5rem;"><strong>Scenario 2: Public Wi-Fi Attack</strong></p>
+                <p>An attacker on campus Wi-Fi attempts to scan for vulnerable devices. The firewall blocks these scanning attempts and prevents unauthorized access.</p>
+                
+                <p style="margin-top: 1.5rem;"><strong>Scenario 3: Data Exfiltration</strong></p>
+                <p>Spyware tries to send personal information to an external server. The firewall detects unusual outbound traffic patterns and blocks the connection.</p>
+            </div>
+        </section>
+        
+        <!-- SIMULATE SECTION -->
+        <section id="simulate" class="section">
+            <div class="hero">
+                <h2>Interactive Firewall Simulation</h2>
+                <p>Watch packets flow through a firewall and see rules in action</p>
+            </div>
+            
+            <div class="simulation-container">
+                <div class="simulation-header">
+                    <h3>Packet Configuration</h3>
+                </div>
+                
+                <div class="packet-config">
+                    <div class="tooltip-wrapper">
+                        <label class="tooltip-label">
+                            Protocol
+                            <span class="info-icon">?</span>
+                        </label>
+                        <div class="tooltip">
+                            <div class="tooltip-title">📡 Protocol</div>
+                            <div class="tooltip-content">
+                                A protocol is a set of rules that defines how data is transmitted over a network. Different protocols serve different purposes.
+                                <div class="tooltip-example">
+                                    <strong>Example:</strong><br>
+                                    HTTP - Web browsing<br>
+                                    HTTPS - Secure web browsing<br>
+                                    SSH - Remote server access
+                                </div>
+                            </div>
+                        </div>
+                        <select id="protocol">
+                            <option value="HTTP">HTTP (Port 80)</option>
+                            <option value="HTTPS">HTTPS (Port 443)</option>
+                            <option value="SSH">SSH (Port 22)</option>
+                            <option value="FTP">FTP (Port 21)</option>
+                            <option value="SMTP">SMTP (Port 25)</option>
+                            <option value="DNS">DNS (Port 53)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="tooltip-wrapper">
+                        <label class="tooltip-label">
+                            Source VLAN
+                            <span class="info-icon">?</span>
+                        </label>
+                        <div class="tooltip">
+                            <div class="tooltip-title">🔷 Source VLAN</div>
+                            <div class="tooltip-content">
+                                The Virtual LAN where the packet is coming FROM. VLANs segment networks to isolate different types of users and devices.
+                                <div class="tooltip-example">
+                                    <strong>Example:</strong><br>
+                                    If a student's laptop sends data, the source VLAN is "VLAN 20 - Student Network"
+                                </div>
+                            </div>
+                        </div>
+                        <select id="sourceVLAN">
+                            <option value="VLAN10">VLAN 10 - Guest Network</option>
+                            <option value="VLAN20">VLAN 20 - Student Network</option>
+                            <option value="VLAN30">VLAN 30 - Faculty Network</option>
+                            <option value="VLAN40">VLAN 40 - Server Network</option>
+                            <option value="VLAN99">VLAN 99 - External/Internet</option>
+                        </select>
+                    </div>
+                    
+                    <div class="tooltip-wrapper">
+                        <label class="tooltip-label">
+                            Destination VLAN
+                            <span class="info-icon">?</span>
+                        </label>
+                        <div class="tooltip">
+                            <div class="tooltip-title">🎯 Destination VLAN</div>
+                            <div class="tooltip-content">
+                                The Virtual LAN where the packet is going TO. The firewall checks if traffic between these two VLANs is allowed.
+                                <div class="tooltip-example">
+                                    <strong>Example:</strong><br>
+                                    If accessing a server, the destination VLAN is "VLAN 40 - Server Network"
+                                </div>
+                            </div>
+                        </div>
+                        <select id="destVLAN">
+                            <option value="VLAN10">VLAN 10 - Guest Network</option>
+                            <option value="VLAN20">VLAN 20 - Student Network</option>
+                            <option value="VLAN30">VLAN 30 - Faculty Network</option>
+                            <option value="VLAN40">VLAN 40 - Server Network</option>
+                            <option value="VLAN99">VLAN 99 - External/Internet</option>
+                        </select>
+                    </div>
+                    
+                    <div class="tooltip-wrapper">
+                        <label class="tooltip-label">
+                            Source IP
+                            <span class="info-icon">?</span>
+                        </label>
+                        <div class="tooltip">
+                            <div class="tooltip-title">🚀 Source IP Address</div>
+                            <div class="tooltip-content">
+                                The IP address of the device SENDING the packet. Think of it as the "return address" on an envelope. The firewall checks who is sending traffic.
+                                <div class="tooltip-example">
+                                    <strong>Example:</strong><br>
+                                    192.168.20.15<br>
+                                    (A student's laptop on VLAN 20)
+                                </div>
+                            </div>
+                        </div>
+                        <input type="text" id="sourceIP" value="192.168.1.100" placeholder="e.g., 192.168.1.100">
+                    </div>
+                    
+                    <div class="tooltip-wrapper">
+                        <label class="tooltip-label">
+                            Destination IP
+                            <span class="info-icon">?</span>
+                        </label>
+                        <div class="tooltip">
+                            <div class="tooltip-title">🎯 Destination IP Address</div>
+                            <div class="tooltip-content">
+                                The IP address of the device RECEIVING the packet. Think of it as the "delivery address" on an envelope. The firewall checks where traffic is going.
+                                <div class="tooltip-example">
+                                    <strong>Example:</strong><br>
+                                    10.0.0.50<br>
+                                    (A web server on VLAN 40)
+                                </div>
+                            </div>
+                        </div>
+                        <input type="text" id="destIP" value="10.0.0.50" placeholder="e.g., 10.0.0.50">
+                    </div>
+                    
+                    <div class="tooltip-wrapper">
+                        <label class="tooltip-label">
+                            Packet Type
+                            <span class="info-icon">?</span>
+                        </label>
+                        <div class="tooltip">
+                            <div class="tooltip-title">📦 Packet Type</div>
+                            <div class="tooltip-content">
+                                The classification of the packet's intent. This helps simulate different security scenarios including attacks.
+                                <div class="tooltip-example">
+                                    <strong>Types:</strong><br>
+                                    Normal - Regular traffic<br>
+                                    Malicious - Simulated attack<br>
+                                    Internal - Intra-network request
+                                </div>
+                            </div>
+                        </div>
+                        <select id="packetType">
+                            <option value="normal">Normal Traffic</option>
+                            <option value="malicious">Malicious Traffic</option>
+                            <option value="internal">Internal Request</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- VLAN Information Display -->
+                <div class="vlan-info-container">
+                    <h4 style="color: var(--accent-primary); margin-bottom: 1rem; font-size: 1.2rem;">🔷 VLAN Segmentation</h4>
+                    <div class="vlan-grid">
+                        <div class="vlan-card vlan-10">
+                            <div class="vlan-header">
+                                <span class="vlan-id">VLAN 10</span>
+                                <span class="vlan-badge">GUEST</span>
+                            </div>
+                            <div class="vlan-desc">Guest Network - Limited Access</div>
+                            <div class="vlan-subnet">Subnet: 192.168.10.0/24</div>
+                        </div>
+                        <div class="vlan-card vlan-20">
+                            <div class="vlan-header">
+                                <span class="vlan-id">VLAN 20</span>
+                                <span class="vlan-badge">STUDENT</span>
+                            </div>
+                            <div class="vlan-desc">Student Network - Standard Access</div>
+                            <div class="vlan-subnet">Subnet: 192.168.20.0/24</div>
+                        </div>
+                        <div class="vlan-card vlan-30">
+                            <div class="vlan-header">
+                                <span class="vlan-id">VLAN 30</span>
+                                <span class="vlan-badge">FACULTY</span>
+                            </div>
+                            <div class="vlan-desc">Faculty Network - Elevated Access</div>
+                            <div class="vlan-subnet">Subnet: 192.168.30.0/24</div>
+                        </div>
+                        <div class="vlan-card vlan-40">
+                            <div class="vlan-header">
+                                <span class="vlan-id">VLAN 40</span>
+                                <span class="vlan-badge">SERVER</span>
+                            </div>
+                            <div class="vlan-desc">Server Network - Restricted Access</div>
+                            <div class="vlan-subnet">Subnet: 10.0.0.0/24</div>
+                        </div>
+                        <div class="vlan-card vlan-99">
+                            <div class="vlan-header">
+                                <span class="vlan-id">VLAN 99</span>
+                                <span class="vlan-badge">EXTERNAL</span>
+                            </div>
+                            <div class="vlan-desc">External/Internet - Public Access</div>
+                            <div class="vlan-subnet">Subnet: Various</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="sendPacket()">Send Packet</button>
+                    <button class="btn btn-secondary" onclick="stepThrough()">Step Through</button>
+                    <button class="btn btn-secondary" onclick="autoSimulate()">Auto Simulate</button>
+                    <button class="btn btn-secondary" onclick="updateIPsFromVLAN()">Auto-Fill IPs from VLAN</button>
+                    <button class="btn btn-danger" onclick="clearSimulation()">Clear All</button>
+                </div>
+            </div>
+            
+            <div class="step-indicator" id="stepIndicator">
+                <div class="step" id="step1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Packet Arrives</div>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Rule Check</div>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Decision</div>
+                </div>
+                <div class="step" id="step4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Log Event</div>
+                </div>
+            </div>
+            
+            <div class="firewall-viz">
+                <div class="network-zone" id="externalZone">
+                    <h4>🌐 External Network</h4>
+                    <div class="packet-container" id="externalPackets"></div>
+                </div>
+                
+                <div class="firewall-box">
+                    <h4>🔥 FIREWALL</h4>
+                    <div class="firewall-icon">🛡️</div>
+                    <div style="text-align: center; color: var(--text-secondary); margin-top: 1rem;">
+                        Processing Rules...
+                    </div>
+                </div>
+                
+                <div class="network-zone" id="internalZone">
+                    <h4>🏢 Internal Network</h4>
+                    <div class="packet-container" id="internalPackets"></div>
+                </div>
+            </div>
+            
+            <!-- Animated Flow Diagram -->
+            <div class="flow-diagram-container">
+                <svg id="flowDiagram" width="100%" height="200" style="display: block;">
+                    <!-- External Network Box -->
+                    <rect x="50" y="60" width="150" height="80" fill="var(--bg-card)" stroke="var(--accent-primary)" stroke-width="2" rx="8"/>
+                    <text x="125" y="95" text-anchor="middle" fill="var(--accent-primary)" font-family="Outfit" font-size="14" font-weight="700">EXTERNAL</text>
+                    <text x="125" y="115" text-anchor="middle" fill="var(--text-secondary)" font-family="Outfit" font-size="12">NETWORK</text>
+                    
+                    <!-- Arrow to Firewall -->
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" fill="var(--accent-primary)" />
+                        </marker>
+                        <marker id="arrowhead-blocked" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" fill="var(--accent-danger)" />
+                        </marker>
+                    </defs>
+                    <line x1="200" y1="100" x2="380" y2="100" stroke="var(--accent-primary)" stroke-width="2" marker-end="url(#arrowhead)" stroke-dasharray="5,5">
+                        <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+                    </line>
+                    
+                    <!-- Firewall Box -->
+                    <rect x="380" y="50" width="140" height="100" fill="var(--bg-card)" stroke="var(--accent-secondary)" stroke-width="3" rx="8"/>
+                    <text x="450" y="85" text-anchor="middle" fill="var(--accent-secondary)" font-family="Outfit" font-size="16" font-weight="700">FIREWALL</text>
+                    <text x="450" y="105" text-anchor="middle" fill="var(--text-secondary)" font-family="Outfit" font-size="20">🛡️</text>
+                    <text x="450" y="130" text-anchor="middle" fill="var(--text-secondary)" font-family="Outfit" font-size="11">Rule Engine</text>
+                    
+                    <!-- Arrow to Internal (Allow path) -->
+                    <line x1="520" y1="85" x2="680" y2="85" stroke="var(--accent-success)" stroke-width="2" marker-end="url(#arrowhead)" stroke-dasharray="5,5" id="allowPath" opacity="0.3">
+                        <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+                    </line>
+                    <text x="600" y="75" text-anchor="middle" fill="var(--accent-success)" font-family="Outfit" font-size="11" font-weight="600">✓ ALLOW</text>
+                    
+                    <!-- Arrow blocked (Deny path) -->
+                    <line x1="520" y1="115" x2="680" y2="115" stroke="var(--accent-danger)" stroke-width="2" marker-end="url(#arrowhead-blocked)" stroke-dasharray="5,5" id="denyPath" opacity="0.3">
+                        <animate attributeName="stroke-dashoffset" from="10" to="0" dur="1s" repeatCount="indefinite"/>
+                    </line>
+                    <text x="600" y="135" text-anchor="middle" fill="var(--accent-danger)" font-family="Outfit" font-size="11" font-weight="600">✗ BLOCK</text>
+                    
+                    <!-- Internal Network Box -->
+                    <rect x="680" y="60" width="150" height="80" fill="var(--bg-card)" stroke="var(--accent-success)" stroke-width="2" rx="8"/>
+                    <text x="755" y="95" text-anchor="middle" fill="var(--accent-success)" font-family="Outfit" font-size="14" font-weight="700">INTERNAL</text>
+                    <text x="755" y="115" text-anchor="middle" fill="var(--text-secondary)" font-family="Outfit" font-size="12">NETWORK</text>
+                    
+                    <!-- Animated packets -->
+                    <g id="animatedPackets"></g>
+                </svg>
+            </div>
+            
+            <div class="simulation-container">
+                <div class="simulation-header">
+                    <h3>Active Firewall Rules</h3>
+                    <div class="controls">
+                        <button class="btn btn-primary" onclick="openAddRuleModal()">+ Add New Rule</button>
+                        <button class="btn btn-secondary" onclick="resetRulesToDefault()">Reset to Default</button>
+                    </div>
+                </div>
+                <div class="rules-editor" id="rulesEditor">
+                    <div style="color: var(--accent-primary); font-weight: 700; margin-bottom: 1rem; font-size: 1.1rem;">Protocol-Based Rules</div>
+                    <div class="rule-item" data-rule-id="1">
+                        <div class="rule-text">ALLOW HTTPS (443) from ANY to ANY</div>
+                        <div class="rule-actions">
+                            <div class="rule-action allow">ALLOW</div>
+                            <button class="rule-btn edit-btn" onclick="editRule(1)" title="Edit Rule">✏️</button>
+                            <button class="rule-btn delete-btn" onclick="deleteRule(1)" title="Delete Rule">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="rule-item" data-rule-id="2">
+                        <div class="rule-text">ALLOW HTTP (80) from ANY to ANY</div>
+                        <div class="rule-actions">
+                            <div class="rule-action allow">ALLOW</div>
+                            <button class="rule-btn edit-btn" onclick="editRule(2)" title="Edit Rule">✏️</button>
+                            <button class="rule-btn delete-btn" onclick="deleteRule(2)" title="Delete Rule">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="rule-item" data-rule-id="3">
+                        <div class="rule-text">ALLOW DNS (53) from ANY to ANY</div>
+                        <div class="rule-actions">
+                            <div class="rule-action allow">ALLOW</div>
+                            <button class="rule-btn edit-btn" onclick="editRule(3)" title="Edit Rule">✏️</button>
+                            <button class="rule-btn delete-btn" onclick="deleteRule(3)" title="Delete Rule">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="rule-item deny" data-rule-id="4">
+                        <div class="rule-text">DENY SSH (22) from EXTERNAL to INTERNAL</div>
+                        <div class="rule-actions">
+                            <div class="rule-action deny">DENY</div>
+                            <button class="rule-btn edit-btn" onclick="editRule(4)" title="Edit Rule">✏️</button>
+                            <button class="rule-btn delete-btn" onclick="deleteRule(4)" title="Delete Rule">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="rule-item deny" data-rule-id="5">
+                        <div class="rule-text">DENY FTP (21) from ANY to ANY</div>
+                        <div class="rule-actions">
+                            <div class="rule-action deny">DENY</div>
+                            <button class="rule-btn edit-btn" onclick="editRule(5)" title="Edit Rule">✏️</button>
+                            <button class="rule-btn delete-btn" onclick="deleteRule(5)" title="Delete Rule">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="rule-item deny" data-rule-id="6">
+                        <div class="rule-text">DENY SMTP (25) from EXTERNAL to INTERNAL</div>
+                        <div class="rule-actions">
+                            <div class="rule-action deny">DENY</div>
+                            <button class="rule-btn edit-btn" onclick="editRule(6)" title="Edit Rule">✏️</button>
+                            <button class="rule-btn delete-btn" onclick="deleteRule(6)" title="Delete Rule">🗑️</button>
+                        </div>
+                    </div>
+                    
+                    <div style="color: var(--accent-secondary); font-weight: 700; margin: 1.5rem 0 1rem 0; font-size: 1.1rem;">VLAN Segmentation Rules</div>
+                    <div class="rule-item deny" data-rule-id="7">
+                        <div class="rule-text">DENY VLAN 10 (Guest) → VLAN 40 (Server)</div>
+                        <div class="rule-actions">
+                            <div class="rule-action deny">DENY</div>
+                            <button class="rule-btn edit-btn" onclick="editRule(7)" title="Edit Rule">✏️</button>
+                            <button class="rule-btn delete-btn" onclick="deleteRule(7)" title="Delete Rule">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="rule-item deny" data-rule-id="8">
+                        <div class="rule-text">DENY VLAN 10 (Guest) → VLAN 30 (Faculty)</div>
+                        <div class="rule-actions">
+                            <div class="rule-action deny">DENY</div>
+                            <button class="rule-btn edit-btn" onclick="editRule(8)" title="Edit Rule">✏️</button>
+                            <button class="rule-btn delete-btn" onclick="deleteRule(8)" title="Delete Rule">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="rule-item" data-rule-id="9">
+                        <div class="rule-text">ALLOW VLAN 20 (Student) → VLAN 40 (Server) on HTTP/HTTPS</div>
+                        <div class="rule-actions">
+                            <div class="rule-action allow">ALLOW</div>
+                            <button class="rule-btn edit-btn" onclick="editRule(9)" title="Edit Rule">✏️</button>
+                            <button class="rule-btn delete-btn" onclick="deleteRule(9)" title="Delete Rule">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="rule-item" data-rule-id="10">
+                        <div class="rule-text">ALLOW VLAN 30 (Faculty) → VLAN 40 (Server) on ANY</div>
+                        <div class="rule-actions">
+                            <div class="rule-action allow">ALLOW</div>
+                            <button class="rule-btn edit-btn" onclick="editRule(10)" title="Edit Rule">✏️</button>
+                            <button class="rule-btn delete-btn" onclick="deleteRule(10)" title="Delete Rule">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="rule-item deny" data-rule-id="11">
+                        <div class="rule-text">DENY VLAN 20 (Student) → VLAN 30 (Faculty)</div>
+                        <div class="rule-actions">
+                            <div class="rule-action deny">DENY</div>
+                            <button class="rule-btn edit-btn" onclick="editRule(11)" title="Edit Rule">✏️</button>
+                            <button class="rule-btn delete-btn" onclick="deleteRule(11)" title="Delete Rule">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="rule-item" data-rule-id="12">
+                        <div class="rule-text">ALLOW ANY VLAN → VLAN 99 (Internet)</div>
+                        <div class="rule-actions">
+                            <div class="rule-action allow">ALLOW</div>
+                            <button class="rule-btn edit-btn" onclick="editRule(12)" title="Edit Rule">✏️</button>
+                            <button class="rule-btn delete-btn" onclick="deleteRule(12)" title="Delete Rule">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="rule-item deny" data-rule-id="13">
+                        <div class="rule-text">DENY ALL from MALICIOUS IPs</div>
+                        <div class="rule-actions">
+                            <div class="rule-action deny">DENY</div>
+                            <button class="rule-btn edit-btn" onclick="editRule(13)" title="Edit Rule">✏️</button>
+                            <button class="rule-btn delete-btn" onclick="deleteRule(13)" title="Delete Rule">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Rule Editor Modal -->
+            <div id="ruleModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="modalTitle">Add New Firewall Rule</h3>
+                        <button class="modal-close" onclick="closeRuleModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Rule Action</label>
+                            <select id="ruleAction" class="modal-select">
+                                <option value="allow">ALLOW</option>
+                                <option value="deny">DENY</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Rule Type</label>
+                            <select id="ruleType" class="modal-select" onchange="updateRuleForm()">
+                                <option value="protocol">Protocol-Based Rule</option>
+                                <option value="vlan">VLAN-Based Rule</option>
+                            </select>
+                        </div>
+                        
+                        <div id="protocolFields">
+                            <div class="form-group">
+                                <label>Protocol</label>
+                                <select id="ruleProtocol" class="modal-select">
+                                    <option value="HTTP">HTTP (Port 80)</option>
+                                    <option value="HTTPS">HTTPS (Port 443)</option>
+                                    <option value="SSH">SSH (Port 22)</option>
+                                    <option value="FTP">FTP (Port 21)</option>
+                                    <option value="SMTP">SMTP (Port 25)</option>
+                                    <option value="DNS">DNS (Port 53)</option>
+                                    <option value="ANY">ANY Protocol</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div id="vlanFields" style="display: none;">
+                            <div class="form-group">
+                                <label>Source VLAN</label>
+                                <select id="ruleSourceVLAN" class="modal-select">
+                                    <option value="VLAN10">VLAN 10 - Guest</option>
+                                    <option value="VLAN20">VLAN 20 - Student</option>
+                                    <option value="VLAN30">VLAN 30 - Faculty</option>
+                                    <option value="VLAN40">VLAN 40 - Server</option>
+                                    <option value="VLAN99">VLAN 99 - External</option>
+                                    <option value="ANY">ANY VLAN</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Destination VLAN</label>
+                                <select id="ruleDestVLAN" class="modal-select">
+                                    <option value="VLAN10">VLAN 10 - Guest</option>
+                                    <option value="VLAN20">VLAN 20 - Student</option>
+                                    <option value="VLAN30">VLAN 30 - Faculty</option>
+                                    <option value="VLAN40">VLAN 40 - Server</option>
+                                    <option value="VLAN99">VLAN 99 - External</option>
+                                    <option value="ANY">ANY VLAN</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>On Protocol (Optional)</label>
+                                <select id="ruleVLANProtocol" class="modal-select">
+                                    <option value="ANY">ANY Protocol</option>
+                                    <option value="HTTP">HTTP Only</option>
+                                    <option value="HTTPS">HTTPS Only</option>
+                                    <option value="HTTP/HTTPS">HTTP/HTTPS</option>
+                                    <option value="SSH">SSH Only</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>From</label>
+                            <select id="ruleFrom" class="modal-select">
+                                <option value="ANY">ANY</option>
+                                <option value="EXTERNAL">EXTERNAL</option>
+                                <option value="INTERNAL">INTERNAL</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>To</label>
+                            <select id="ruleTo" class="modal-select">
+                                <option value="ANY">ANY</option>
+                                <option value="EXTERNAL">EXTERNAL</option>
+                                <option value="INTERNAL">INTERNAL</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeRuleModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="saveRule()">Save Rule</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="simulation-container">
+                <div class="simulation-header">
+                    <h3>📋 Traffic Logs</h3>
+                    <button class="btn btn-secondary" onclick="clearLogs()">Clear Logs</button>
+                </div>
+                <div class="log-container" id="logContainer">
+                    <div class="log-entry" style="color: var(--text-secondary);">
+                        Firewall ready. Waiting for traffic...
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- GLOSSARY SECTION -->
+        <section id="glossary" class="section">
+            <div class="hero">
+                <h2>Cybersecurity Glossary</h2>
+                <p>Essential terms and concepts for understanding network security</p>
+            </div>
+            
+            <div class="glossary-grid">
+                <div class="glossary-item">
+                    <div class="glossary-term">Firewall</div>
+                    <div class="glossary-definition">A network security system that monitors and controls incoming and outgoing network traffic based on predetermined security rules. Acts as a barrier between trusted internal networks and untrusted external networks.</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">Packet</div>
+                    <div class="glossary-definition">A small unit of data transmitted over a network. Packets contain both the data being sent and metadata (header information) like source/destination addresses, protocol type, and port numbers.</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">IP Address</div>
+                    <div class="glossary-definition">Internet Protocol address - a unique numerical identifier assigned to each device on a network. Similar to a street address for computers (e.g., 192.168.1.1).</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">Port Number</div>
+                    <div class="glossary-definition">A numerical identifier for specific processes or services on a networked device. Common ports include 80 (HTTP), 443 (HTTPS), 22 (SSH), and 21 (FTP).</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">Protocol</div>
+                    <div class="glossary-definition">A set of rules governing how data is transmitted over a network. Examples include HTTP (web traffic), HTTPS (secure web), SSH (secure shell), and FTP (file transfer).</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">Allow Rule</div>
+                    <div class="glossary-definition">A firewall rule that permits specific traffic to pass through the firewall. Traffic matching an allow rule is forwarded to its destination.</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">Deny/Block Rule</div>
+                    <div class="glossary-definition">A firewall rule that prevents specific traffic from passing through. Blocked packets are dropped and never reach their intended destination.</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">Stateful Inspection</div>
+                    <div class="glossary-definition">A firewall technique that tracks the state of active network connections. Makes filtering decisions based on the context of traffic, not just individual packets.</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">Packet Filtering</div>
+                    <div class="glossary-definition">The process of examining individual packets and making allow/deny decisions based on header information like IP addresses, ports, and protocols.</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">DMZ (Demilitarized Zone)</div>
+                    <div class="glossary-definition">A network segment that sits between an internal network and an external network, providing an additional layer of security for public-facing services.</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">IDS/IPS</div>
+                    <div class="glossary-definition">Intrusion Detection/Prevention System - monitors network traffic for suspicious activity. IDS alerts administrators while IPS actively blocks threats.</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">Malware</div>
+                    <div class="glossary-definition">Malicious software designed to damage, disrupt, or gain unauthorized access to computer systems. Includes viruses, trojans, ransomware, and spyware.</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">Encryption</div>
+                    <div class="glossary-definition">The process of encoding data so it can only be read by authorized parties with the decryption key. HTTPS uses encryption to protect web traffic.</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">DDoS Attack</div>
+                    <div class="glossary-definition">Distributed Denial of Service - an attack that floods a network or server with traffic from multiple sources, overwhelming it and making services unavailable.</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">VPN (Virtual Private Network)</div>
+                    <div class="glossary-definition">A secure encrypted connection over a less secure network (like the internet). Creates a private tunnel for data transmission.</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">Next-Generation Firewall (NGFW)</div>
+                    <div class="glossary-definition">An advanced firewall that combines traditional filtering with additional features like intrusion prevention, application awareness, and threat intelligence.</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">VLAN (Virtual Local Area Network)</div>
+                    <div class="glossary-definition">A logical network segment that groups devices together regardless of their physical location. VLANs improve security by isolating different types of network traffic (e.g., guest, student, faculty networks).</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">VLAN Segmentation</div>
+                    <div class="glossary-definition">The practice of dividing a network into multiple VLANs to separate traffic and enhance security. For example, preventing guest devices from accessing internal servers while allowing faculty full access.</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">Inter-VLAN Routing</div>
+                    <div class="glossary-definition">The process of routing traffic between different VLANs. Firewalls control which VLANs can communicate with each other based on security policies (e.g., blocking students from faculty networks).</div>
+                </div>
+                
+                <div class="glossary-item">
+                    <div class="glossary-term">Network Segmentation</div>
+                    <div class="glossary-definition">Dividing a network into smaller, isolated segments to limit the spread of security threats and control access. VLANs are a common way to implement network segmentation.</div>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <script>
+        // Navigation
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all nav buttons
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+        
+        // Simulation variables
+        let packetCounter = 0;
+        let stepMode = false;
+        let currentStep = 0;
+        
+        // Firewall rules
+        const firewallRules = {
+            'HTTPS': { port: 443, action: 'allow' },
+            'HTTP': { port: 80, action: 'allow' },
+            'DNS': { port: 53, action: 'allow' },
+            'SSH': { port: 22, action: 'deny' },
+            'FTP': { port: 21, action: 'deny' },
+            'SMTP': { port: 25, action: 'deny' }
+        };
+        
+        // VLAN rules
+        const vlanRules = {
+            'VLAN10_VLAN40': { action: 'deny', reason: 'Guest network blocked from servers' },
+            'VLAN10_VLAN30': { action: 'deny', reason: 'Guest network blocked from faculty' },
+            'VLAN20_VLAN30': { action: 'deny', reason: 'Student network blocked from faculty' },
+            'VLAN20_VLAN40': { action: 'conditional', protocols: ['HTTP', 'HTTPS'], reason: 'Students can access servers via web only' },
+            'VLAN30_VLAN40': { action: 'allow', reason: 'Faculty has full server access' },
+            'ANY_VLAN99': { action: 'allow', reason: 'Internet access allowed from all VLANs' }
+        };
+        
+        // Send packet function
+        function sendPacket() {
+            const protocol = document.getElementById('protocol').value;
+            const sourceIP = document.getElementById('sourceIP').value;
+            const destIP = document.getElementById('destIP').value;
+            const packetType = document.getElementById('packetType').value;
+            const sourceVLAN = document.getElementById('sourceVLAN').value;
+            const destVLAN = document.getElementById('destVLAN').value;
+            
+            packetCounter++;
+            
+            // Highlight active VLANs
+            highlightVLANs(sourceVLAN, destVLAN);
+            
+            // Determine if packet should be blocked
+            const rule = firewallRules[protocol];
+            let action = rule ? rule.action : 'deny';
+            let blockReason = '';
+            
+            // Check VLAN rules
+            const vlanKey = `${sourceVLAN}_${destVLAN}`;
+            const vlanRule = vlanRules[vlanKey];
+            
+            if (vlanRule) {
+                if (vlanRule.action === 'deny') {
+                    action = 'deny';
+                    blockReason = vlanRule.reason;
+                } else if (vlanRule.action === 'conditional') {
+                    if (!vlanRule.protocols.includes(protocol)) {
+                        action = 'deny';
+                        blockReason = `${protocol} not allowed between ${sourceVLAN} and ${destVLAN}`;
+                    }
+                }
+            } else if (sourceVLAN === destVLAN) {
+                // Same VLAN traffic is usually allowed
+                action = rule ? rule.action : 'deny';
+            } else if (destVLAN === 'VLAN99') {
+                // Internet access
+                action = rule ? rule.action : 'deny';
+            } else {
+                // Default: check for specific deny rules
+                const blockedPairs = ['VLAN10_VLAN40', 'VLAN10_VLAN30', 'VLAN20_VLAN30'];
+                if (blockedPairs.includes(vlanKey)) {
+                    action = 'deny';
+                }
+            }
+            
+            // Block malicious traffic
+            if (packetType === 'malicious') {
+                action = 'deny';
+                blockReason = 'Malicious traffic detected';
+            }
+            
+            // Animate the flow diagram
+            animatePacketFlow(action, protocol, sourceVLAN, destVLAN);
+            
+            // Create packet in external zone
+            const externalPacket = createPacket(packetCounter, protocol, sourceIP, destIP, action, sourceVLAN, destVLAN);
+            document.getElementById('externalPackets').appendChild(externalPacket);
+            
+            // Animate packet processing
+            setTimeout(() => {
+                if (action === 'allow') {
+                    // Move to internal zone
+                    const internalPacket = createPacket(packetCounter, protocol, sourceIP, destIP, action, sourceVLAN, destVLAN);
+                    document.getElementById('internalPackets').appendChild(internalPacket);
+                }
+                
+                // Add to logs
+                addLog(protocol, sourceIP, destIP, action, packetCounter, sourceVLAN, destVLAN, blockReason);
+            }, 1500);
+            
+            // Show explanation
+            setTimeout(() => {
+                showExplanation(protocol, action, packetType, sourceVLAN, destVLAN, blockReason);
+            }, 2000);
+            
+            // Remove VLAN highlights
+            setTimeout(() => {
+                document.querySelectorAll('.vlan-card').forEach(card => {
+                    card.classList.remove('active');
+                });
+            }, 3500);
+        }
+        
+        // Highlight VLANs
+        function highlightVLANs(sourceVLAN, destVLAN) {
+            document.querySelectorAll('.vlan-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            const sourceClass = sourceVLAN.toLowerCase().replace('vlan', 'vlan-');
+            const destClass = destVLAN.toLowerCase().replace('vlan', 'vlan-');
+            
+            document.querySelectorAll(`.${sourceClass}`).forEach(card => {
+                card.classList.add('active');
+            });
+            document.querySelectorAll(`.${destClass}`).forEach(card => {
+                card.classList.add('active');
+            });
+        }
+        
+        // Animate packet flow in diagram
+        function animatePacketFlow(action, protocol) {
+            const svg = document.getElementById('flowDiagram');
+            const animatedPackets = document.getElementById('animatedPackets');
+            
+            // Highlight the appropriate path
+            const allowPath = document.getElementById('allowPath');
+            const denyPath = document.getElementById('denyPath');
+            
+            if (action === 'allow') {
+                allowPath.style.opacity = '1';
+                denyPath.style.opacity = '0.3';
+            } else {
+                allowPath.style.opacity = '0.3';
+                denyPath.style.opacity = '1';
+            }
+            
+            // Reset after animation
+            setTimeout(() => {
+                allowPath.style.opacity = '0.3';
+                denyPath.style.opacity = '0.3';
+            }, 3000);
+            
+            // Create animated packet element
+            const packetGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            packetGroup.setAttribute('class', 'animated-packet');
+            
+            const yPosition = action === 'allow' ? 85 : 115;
+            
+            // Packet rectangle
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('x', '50');
+            rect.setAttribute('y', yPosition - 10);
+            rect.setAttribute('width', '40');
+            rect.setAttribute('height', '20');
+            rect.setAttribute('fill', action === 'allow' ? 'var(--accent-success)' : 'var(--accent-danger)');
+            rect.setAttribute('rx', '4');
+            rect.setAttribute('class', 'packet-icon');
+            
+            // Packet label
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', '70');
+            text.setAttribute('y', yPosition + 4);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('fill', 'white');
+            text.setAttribute('font-family', 'Outfit');
+            text.setAttribute('font-size', '10');
+            text.setAttribute('font-weight', '700');
+            text.textContent = protocol.substring(0, 4);
+            
+            packetGroup.appendChild(rect);
+            packetGroup.appendChild(text);
+            animatedPackets.appendChild(packetGroup);
+            
+            // Animate the packet
+            if (action === 'allow') {
+                packetGroup.style.animation = 'packetFlow 3s ease-in-out forwards';
+            } else {
+                packetGroup.style.animation = 'packetFlowBlocked 3s ease-in-out forwards';
+            }
+            
+            // Remove after animation
+            setTimeout(() => {
+                animatedPackets.removeChild(packetGroup);
+            }, 3000);
+        }
+        
+        // Create packet element
+        function createPacket(id, protocol, source, dest, action, sourceVLAN, destVLAN) {
+            const packet = document.createElement('div');
+            packet.className = `packet ${action === 'allow' ? 'allowed' : 'blocked'}`;
+            packet.innerHTML = `
+                <div class="packet-status ${action === 'allow' ? 'allowed' : 'blocked'}">
+                    ${action === 'allow' ? 'ALLOWED' : 'BLOCKED'}
+                </div>
+                <div><strong>Packet #${id}</strong></div>
+                <div>Protocol: ${protocol}</div>
+                <div>From: ${source} (${sourceVLAN})</div>
+                <div>To: ${dest} (${destVLAN})</div>
+            `;
+            return packet;
+        }
+        
+        // Add log entry
+        function addLog(protocol, source, dest, action, id, sourceVLAN, destVLAN, blockReason) {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${action === 'allow' ? 'allowed' : 'blocked'}`;
+            
+            let reasonText = '';
+            if (blockReason) {
+                reasonText = ` | Reason: ${blockReason}`;
+            }
+            
+            logEntry.innerHTML = `
+                <span class="timestamp">[${timestamp}]</span>
+                Packet #${id} | ${protocol} | ${sourceVLAN} → ${destVLAN} | ${source} → ${dest} | 
+                <strong>${action.toUpperCase()}</strong>${reasonText}
+            `;
+            
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+            
+            // Keep only last 50 logs
+            while (logContainer.children.length > 50) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+        
+        // Show explanation
+        function showExplanation(protocol, action, packetType, sourceVLAN, destVLAN, blockReason) {
+            const logContainer = document.getElementById('logContainer');
+            const explanation = document.createElement('div');
+            explanation.className = 'log-entry';
+            explanation.style.background = 'rgba(0, 255, 255, 0.1)';
+            explanation.style.color = 'var(--accent-primary)';
+            explanation.style.borderLeft = '4px solid var(--accent-primary)';
+            explanation.style.padding = '1rem';
+            
+            let message = '';
+            if (packetType === 'malicious') {
+                message = `🛡️ This packet was identified as malicious traffic and blocked by security rules.`;
+            } else if (blockReason) {
+                message = `🔷 VLAN Policy: ${blockReason}. Traffic from ${sourceVLAN} to ${destVLAN} is restricted.`;
+            } else if (action === 'allow') {
+                if (sourceVLAN === destVLAN) {
+                    message = `✓ ${protocol} traffic within ${sourceVLAN} is permitted (intra-VLAN communication).`;
+                } else {
+                    message = `✓ ${protocol} traffic from ${sourceVLAN} to ${destVLAN} is permitted by both protocol and VLAN policies.`;
+                }
+            } else {
+                message = `✗ ${protocol} traffic is blocked by firewall policy to prevent unauthorized access.`;
+            }
+            
+            explanation.innerHTML = `<strong>Explanation:</strong> ${message}`;
+            logContainer.insertBefore(explanation, logContainer.firstChild);
+        }
+        
+        // Step through mode
+        function stepThrough() {
+            alert('Step-through mode: This would allow you to manually advance through each stage of packet processing:\n\n1. Packet Arrival\n2. Rule Inspection\n3. Decision Making\n4. Logging\n\nClick through each step to understand the firewall process in detail.');
+            
+            // Highlight steps sequentially
+            const steps = ['step1', 'step2', 'step3', 'step4'];
+            let currentStep = 0;
+            
+            const interval = setInterval(() => {
+                // Remove active from all
+                steps.forEach(s => document.getElementById(s).classList.remove('active'));
+                
+                // Add active to current
+                if (currentStep < steps.length) {
+                    document.getElementById(steps[currentStep]).classList.add('active');
+                    currentStep++;
+                } else {
+                    clearInterval(interval);
+                    steps.forEach(s => document.getElementById(s).classList.remove('active'));
+                }
+            }, 1000);
+        }
+        
+        // Auto simulate
+        function autoSimulate() {
+            const protocols = ['HTTP', 'HTTPS', 'SSH', 'DNS', 'FTP'];
+            const packetTypes = ['normal', 'normal', 'normal', 'malicious'];
+            
+            let count = 0;
+            const interval = setInterval(() => {
+                if (count >= 5) {
+                    clearInterval(interval);
+                    return;
+                }
+                
+                // Randomize packet
+                document.getElementById('protocol').value = protocols[Math.floor(Math.random() * protocols.length)];
+                document.getElementById('packetType').value = packetTypes[Math.floor(Math.random() * packetTypes.length)];
+                document.getElementById('sourceIP').value = `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+                
+                sendPacket();
+                count++;
+            }, 2500);
+        }
+        
+        // Clear simulation
+        function clearSimulation() {
+            document.getElementById('externalPackets').innerHTML = '';
+            document.getElementById('internalPackets').innerHTML = '';
+            packetCounter = 0;
+        }
+        
+        // Clear logs
+        function clearLogs() {
+            document.getElementById('logContainer').innerHTML = `
+                <div class="log-entry" style="color: var(--text-secondary);">
+                    Logs cleared. Ready for new traffic...
+                </div>
+            `;
+        }
+        
+        // Auto-fill IPs from VLAN selection
+        function updateIPsFromVLAN() {
+            const sourceVLAN = document.getElementById('sourceVLAN').value;
+            const destVLAN = document.getElementById('destVLAN').value;
+            
+            const vlanToIP = {
+                'VLAN10': '192.168.10',
+                'VLAN20': '192.168.20',
+                'VLAN30': '192.168.30',
+                'VLAN40': '10.0.0',
+                'VLAN99': '8.8.8'
+            };
+            
+            // Generate random host portion (last octet)
+            const sourceHost = Math.floor(Math.random() * 50) + 10;
+            const destHost = Math.floor(Math.random() * 50) + 10;
+            
+            // Update IP fields
+            document.getElementById('sourceIP').value = `${vlanToIP[sourceVLAN]}.${sourceHost}`;
+            document.getElementById('destIP').value = `${vlanToIP[destVLAN]}.${destHost}`;
+            
+            // Show helpful message
+            const logContainer = document.getElementById('logContainer');
+            const explanation = document.createElement('div');
+            explanation.className = 'log-entry';
+            explanation.style.background = 'rgba(0, 255, 255, 0.1)';
+            explanation.style.color = 'var(--accent-primary)';
+            explanation.style.borderLeft = '4px solid var(--accent-primary)';
+            explanation.style.padding = '1rem';
+            explanation.innerHTML = `
+                <strong>💡 IP Addresses Auto-Filled:</strong><br>
+                ${sourceVLAN} uses subnet ${vlanToIP[sourceVLAN]}.0/24, so source IP is ${vlanToIP[sourceVLAN]}.${sourceHost}<br>
+                ${destVLAN} uses subnet ${vlanToIP[destVLAN]}.0/24, so destination IP is ${vlanToIP[destVLAN]}.${destHost}<br>
+                <em>The first three numbers identify the network (VLAN), and the last number identifies the specific device.</em>
+            `;
+            logContainer.insertBefore(explanation, logContainer.firstChild);
+        }
+        
+        // Auto-update IPs when VLAN selection changes
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('sourceVLAN').addEventListener('change', updateIPsFromVLAN);
+            document.getElementById('destVLAN').addEventListener('change', updateIPsFromVLAN);
+            
+            // Set initial values
+            updateIPsFromVLAN();
+        });
+        
+        // Rule management
+        let ruleCounter = 14; // Continue from existing rules
+        let editingRuleId = null;
+        let defaultRulesHTML = '';
+        
+        // Store default rules on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            defaultRulesHTML = document.getElementById('rulesEditor').innerHTML;
+        });
+        
+        // Open modal for adding new rule
+        function openAddRuleModal() {
+            editingRuleId = null;
+            document.getElementById('modalTitle').textContent = 'Add New Firewall Rule';
+            document.getElementById('ruleModal').classList.add('active');
+            
+            // Reset form
+            document.getElementById('ruleAction').value = 'allow';
+            document.getElementById('ruleType').value = 'protocol';
+            document.getElementById('ruleProtocol').value = 'HTTP';
+            document.getElementById('ruleFrom').value = 'ANY';
+            document.getElementById('ruleTo').value = 'ANY';
+            updateRuleForm();
+        }
+        
+        // Edit existing rule
+        function editRule(ruleId) {
+            editingRuleId = ruleId;
+            const ruleElement = document.querySelector(`[data-rule-id="${ruleId}"]`);
+            const ruleText = ruleElement.querySelector('.rule-text').textContent;
+            const ruleActionElement = ruleElement.querySelector('.rule-action');
+            const action = ruleActionElement.classList.contains('allow') ? 'allow' : 'deny';
+            
+            document.getElementById('modalTitle').textContent = 'Edit Firewall Rule';
+            document.getElementById('ruleAction').value = action;
+            
+            // Parse rule and populate form (simplified)
+            if (ruleText.includes('VLAN')) {
+                document.getElementById('ruleType').value = 'vlan';
+            } else {
+                document.getElementById('ruleType').value = 'protocol';
+            }
+            
+            updateRuleForm();
+            document.getElementById('ruleModal').classList.add('active');
+        }
+        
+        // Delete rule
+        function deleteRule(ruleId) {
+            if (confirm('Are you sure you want to delete this rule?')) {
+                const ruleElement = document.querySelector(`[data-rule-id="${ruleId}"]`);
+                ruleElement.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    ruleElement.remove();
+                    logRuleChange('deleted', ruleElement.querySelector('.rule-text').textContent);
+                }, 300);
+            }
+        }
+        
+        // Close modal
+        function closeRuleModal() {
+            document.getElementById('ruleModal').classList.remove('active');
+        }
+        
+        // Update form based on rule type
+        function updateRuleForm() {
+            const ruleType = document.getElementById('ruleType').value;
+            const protocolFields = document.getElementById('protocolFields');
+            const vlanFields = document.getElementById('vlanFields');
+            
+            if (ruleType === 'protocol') {
+                protocolFields.style.display = 'block';
+                vlanFields.style.display = 'none';
+            } else {
+                protocolFields.style.display = 'none';
+                vlanFields.style.display = 'block';
+            }
+        }
+        
+        // Save rule (add or edit)
+        function saveRule() {
+            const action = document.getElementById('ruleAction').value;
+            const ruleType = document.getElementById('ruleType').value;
+            const from = document.getElementById('ruleFrom').value;
+            const to = document.getElementById('ruleTo').value;
+            
+            let ruleText = '';
+            
+            if (ruleType === 'protocol') {
+                const protocol = document.getElementById('ruleProtocol').value;
+                const portMap = {
+                    'HTTP': '80',
+                    'HTTPS': '443',
+                    'SSH': '22',
+                    'FTP': '21',
+                    'SMTP': '25',
+                    'DNS': '53'
+                };
+                const port = portMap[protocol] || '';
+                ruleText = `${action.toUpperCase()} ${protocol}${port ? ' (' + port + ')' : ''} from ${from} to ${to}`;
+            } else {
+                const sourceVLAN = document.getElementById('ruleSourceVLAN').value;
+                const destVLAN = document.getElementById('ruleDestVLAN').value;
+                const vlanProtocol = document.getElementById('ruleVLANProtocol').value;
+                
+                const vlanNames = {
+                    'VLAN10': 'VLAN 10 (Guest)',
+                    'VLAN20': 'VLAN 20 (Student)',
+                    'VLAN30': 'VLAN 30 (Faculty)',
+                    'VLAN40': 'VLAN 40 (Server)',
+                    'VLAN99': 'VLAN 99 (Internet)',
+                    'ANY': 'ANY VLAN'
+                };
+                
+                ruleText = `${action.toUpperCase()} ${vlanNames[sourceVLAN]} → ${vlanNames[destVLAN]}`;
+                if (vlanProtocol !== 'ANY') {
+                    ruleText += ` on ${vlanProtocol}`;
+                }
+            }
+            
+            if (editingRuleId) {
+                // Update existing rule
+                const ruleElement = document.querySelector(`[data-rule-id="${editingRuleId}"]`);
+                ruleElement.querySelector('.rule-text').textContent = ruleText;
+                ruleElement.querySelector('.rule-action').textContent = action.toUpperCase();
+                ruleElement.querySelector('.rule-action').className = `rule-action ${action}`;
+                ruleElement.className = `rule-item ${action === 'deny' ? 'deny' : ''}`;
+                
+                logRuleChange('updated', ruleText);
+            } else {
+                // Add new rule
+                const rulesEditor = document.getElementById('rulesEditor');
+                const newRule = document.createElement('div');
+                newRule.className = `rule-item ${action === 'deny' ? 'deny' : ''}`;
+                newRule.setAttribute('data-rule-id', ruleCounter);
+                newRule.innerHTML = `
+                    <div class="rule-text">${ruleText}</div>
+                    <div class="rule-actions">
+                        <div class="rule-action ${action}">${action.toUpperCase()}</div>
+                        <button class="rule-btn edit-btn" onclick="editRule(${ruleCounter})" title="Edit Rule">✏️</button>
+                        <button class="rule-btn delete-btn" onclick="deleteRule(${ruleCounter})" title="Delete Rule">🗑️</button>
+                    </div>
+                `;
+                
+                // Add animation
+                newRule.style.animation = 'slideIn 0.5s ease';
+                rulesEditor.appendChild(newRule);
+                
+                logRuleChange('added', ruleText);
+                ruleCounter++;
+            }
+            
+            closeRuleModal();
+        }
+        
+        // Reset rules to default
+        function resetRulesToDefault() {
+            if (confirm('Are you sure you want to reset all rules to default? This will delete any custom rules you created.')) {
+                document.getElementById('rulesEditor').innerHTML = defaultRulesHTML;
+                ruleCounter = 14;
+                
+                const logContainer = document.getElementById('logContainer');
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.style.background = 'rgba(255, 107, 53, 0.1)';
+                logEntry.style.color = 'var(--accent-secondary)';
+                logEntry.style.borderLeft = '4px solid var(--accent-secondary)';
+                logEntry.style.padding = '1rem';
+                logEntry.innerHTML = `<strong>🔄 Firewall rules reset to default configuration</strong>`;
+                logContainer.insertBefore(logEntry, logContainer.firstChild);
+            }
+        }
+        
+        // Log rule changes
+        function logRuleChange(changeType, ruleText) {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.style.background = 'rgba(0, 255, 255, 0.1)';
+            logEntry.style.color = 'var(--accent-primary)';
+            logEntry.style.borderLeft = '4px solid var(--accent-primary)';
+            logEntry.style.padding = '1rem';
+            
+            const changeIcons = {
+                'added': '➕',
+                'updated': '✏️',
+                'deleted': '🗑️'
+            };
+            
+            logEntry.innerHTML = `
+                <span class="timestamp">[${timestamp}]</span>
+                <strong>${changeIcons[changeType]} Rule ${changeType}:</strong> ${ruleText}
+            `;
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+        }
+        
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('ruleModal');
+            if (event.target === modal) {
+                closeRuleModal();
+            }
+        });
+    </script>
+</body>
+</html>
