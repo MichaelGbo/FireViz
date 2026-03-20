@@ -157,7 +157,36 @@
         .config-group select,.config-group input { width: 100%; background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.25); border-radius: 10px; padding: 10px; color: #fff; font-family: 'Poppins',sans-serif; font-size: 13px; }
         .sim-btn-row { text-align: center; margin: 14px 0; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
         .vm-demo-container { background: rgba(0,0,0,0.5); border: 3px solid #4CAF50; border-radius: 20px; padding: 60px 30px; text-align: center; min-height: 360px; display: flex; flex-direction: column; justify-content: center; }
-        @media(max-width:768px){ .hero h2{font-size:28px} .pf-sim-area,.ngfw-dashboard{grid-template-columns:1fr} .match-area{grid-template-columns:1fr} .drag-area{flex-direction:column} }
+        /* ── VM TERMINAL ── */
+        .qbtn { background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.25); color: #fff; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: 'Courier New',monospace; transition: all 0.2s; }
+        .qbtn:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); border-color: #FFD700; }
+        .term-line { margin: 2px 0; }
+        .term-prompt { color: #4CAF50; }
+        .term-cmd { color: #fff; }
+        .term-out { color: #aaa; white-space: pre; }
+        .term-err { color: #f44336; }
+        .term-info { color: #FFD700; }
+        .term-success { color: #4CAF50; }
+
+        /* ── LAB GUIDE ── */
+        .lab-module { background: linear-gradient(135deg,rgba(0,150,136,0.2),rgba(0,105,92,0.2)); border: 2px solid rgba(0,150,136,0.4); border-radius: 20px; padding: 30px; margin: 25px 0; }
+        .lab-header { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+        .lab-num { background: linear-gradient(45deg,#00BCD4,#009688); padding: 6px 18px; border-radius: 20px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+        .lab-header h3 { font-size: 20px; color: #FFD700; margin: 0; }
+        .lab-step { display: flex; gap: 16px; margin: 16px 0; }
+        .step-num { width: 32px; height: 32px; min-width: 32px; border-radius: 50%; background: rgba(0,188,212,0.3); border: 2px solid #00BCD4; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #00BCD4; margin-top: 2px; }
+        .step-body { flex: 1; }
+        .step-desc { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+        .lab-cmd { background: rgba(0,0,0,0.6); border: 1.5px solid rgba(0,188,212,0.4); border-radius: 10px; padding: 12px 16px; font-family: 'Courier New',monospace; font-size: 13px; color: #4CAF50; cursor: pointer; position: relative; transition: all 0.2s; margin: 6px 0; }
+        .lab-cmd:hover { border-color: #00BCD4; background: rgba(0,188,212,0.08); }
+        .lab-cmd:hover .copy-hint { opacity: 1; }
+        .copy-hint { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 11px; color: #00BCD4; opacity: 0; transition: opacity 0.2s; font-family: 'Poppins',sans-serif; font-weight: 700; }
+        .expected-out { background: rgba(0,0,0,0.5); border-left: 3px solid rgba(255,255,255,0.2); border-radius: 0 8px 8px 0; padding: 10px 14px; font-family: 'Courier New',monospace; font-size: 12px; color: #bbb; white-space: pre; margin: 4px 0 8px; line-height: 1.7; overflow-x: auto; }
+        .step-note { font-size: 13px; color: rgba(255,255,255,0.7); background: rgba(255,200,0,0.07); border-radius: 8px; padding: 8px 12px; margin-top: 6px; line-height: 1.5; }
+        .step-note code { background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 4px; color: #4CAF50; font-size: 12px; }
+        .copied-flash { border-color: #4CAF50 !important; background: rgba(76,175,80,0.15) !important; }
+
+        @media(max-width:768px){ .hero h2{font-size:28px} .pf-sim-area,.ngfw-dashboard{grid-template-columns:1fr} .match-area{grid-template-columns:1fr} .drag-area{flex-direction:column} .lab-step{flex-direction:column} .step-num{align-self:flex-start} }
     </style>
 </head>
 <body>
@@ -682,13 +711,243 @@
 <section id="vm-demo" class="section">
     <div class="hero">
         <h2><i class="fas fa-server"></i> VM Demo</h2>
-        <p>Real firewall commands on Ubuntu VirtualBox</p>
+        <p>Practice UFW firewall commands — simulated terminal or follow along on your real Ubuntu VirtualBox</p>
     </div>
-    <div class="vm-demo-container">
-        <i class="fas fa-desktop" style="font-size:60px;color:#4CAF50;margin-bottom:22px"></i>
-        <h2 style="color:#4CAF50;font-size:32px;margin-bottom:10px">Live VM Demo</h2>
-        <p>Terminal output from Ubuntu VirtualBox with UFW firewall.</p>
-        <p style="margin-top:16px;color:#FFD700"><i class="fas fa-tools"></i> Coming Soon</p>
+
+    <!-- Tab switcher -->
+    <div class="sim-tabs">
+        <div class="sim-tab active" onclick="showVmTab('terminal',this)"><i class="fas fa-terminal"></i> Simulated Terminal</div>
+        <div class="sim-tab" onclick="showVmTab('lab',this)"><i class="fas fa-flask"></i> Real Lab Guide</div>
+    </div>
+
+    <!-- ══════ SIMULATED TERMINAL ══════ -->
+    <div id="vm-terminal" class="sim-content active">
+        <div class="card" style="padding:0;overflow:hidden;border-radius:20px">
+            <!-- Window chrome -->
+            <div style="background:#2d2d2d;padding:12px 20px;display:flex;align-items:center;gap:10px;border-bottom:2px solid rgba(255,255,255,0.1)">
+                <span style="width:13px;height:13px;border-radius:50%;background:#ff5f57;display:inline-block"></span>
+                <span style="width:13px;height:13px;border-radius:50%;background:#febc2e;display:inline-block"></span>
+                <span style="width:13px;height:13px;border-radius:50%;background:#28c840;display:inline-block"></span>
+                <span style="flex:1;text-align:center;font-size:13px;color:rgba(255,255,255,0.5);font-family:'Courier New',monospace">vboxuser@Ubuntu: ~</span>
+            </div>
+            <!-- Terminal output -->
+            <div id="term-output" style="background:#1a1a2e;min-height:380px;max-height:480px;overflow-y:auto;padding:20px;font-family:'Courier New',monospace;font-size:13px;line-height:1.8;color:#e0e0e0"></div>
+            <!-- Input row -->
+            <div style="background:#1a1a2e;border-top:1px solid rgba(255,255,255,0.08);padding:12px 20px;display:flex;align-items:center;gap:10px">
+                <span style="color:#4CAF50;font-family:'Courier New',monospace;font-size:13px;white-space:nowrap">vboxuser@Ubuntu:~$</span>
+                <input id="term-input" type="text" placeholder="Type a UFW command and press Enter..." autocomplete="off" autocorrect="off" spellcheck="false"
+                    style="flex:1;background:transparent;border:none;color:#fff;font-family:'Courier New',monospace;font-size:13px;outline:none"
+                    onkeydown="handleTermKey(event)">
+            </div>
+        </div>
+
+        <!-- Quick-command buttons -->
+        <div class="card" style="margin-top:20px">
+            <h4 style="color:#FFD700;margin-bottom:16px"><i class="fas fa-bolt"></i> Quick Commands — click to run</h4>
+            <div style="display:flex;flex-wrap:wrap;gap:10px">
+                <button class="qbtn" onclick="runCmd('sudo ufw status')">ufw status</button>
+                <button class="qbtn" onclick="runCmd('sudo ufw enable')">ufw enable</button>
+                <button class="qbtn" onclick="runCmd('sudo ufw disable')">ufw disable</button>
+                <button class="qbtn" onclick="runCmd('sudo ufw status verbose')">status verbose</button>
+                <button class="qbtn" onclick="runCmd('sudo ufw allow 80/tcp')">allow HTTP</button>
+                <button class="qbtn" onclick="runCmd('sudo ufw allow 443/tcp')">allow HTTPS</button>
+                <button class="qbtn" onclick="runCmd('sudo ufw allow 22/tcp')">allow SSH</button>
+                <button class="qbtn" onclick="runCmd('sudo ufw deny 23/tcp')">deny Telnet</button>
+                <button class="qbtn" onclick="runCmd('sudo ufw deny 21/tcp')">deny FTP</button>
+                <button class="qbtn" onclick="runCmd('sudo ufw allow from 192.168.1.0/24')">allow LAN</button>
+                <button class="qbtn" onclick="runCmd('sudo ufw deny from 10.10.10.5')">deny specific IP</button>
+                <button class="qbtn" onclick="runCmd('sudo ufw delete allow 80/tcp')">delete rule</button>
+                <button class="qbtn" onclick="runCmd('sudo ufw logging on')">enable logging</button>
+                <button class="qbtn" onclick="runCmd('sudo ufw reset')">reset UFW</button>
+                <button class="qbtn" onclick="runCmd('sudo ufw numbered')">show numbered</button>
+                <button class="qbtn" onclick="runCmd('help')">help</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════ REAL LAB GUIDE ══════ -->
+    <div id="vm-lab" class="sim-content">
+        <div style="background:rgba(255,200,0,0.08);border:2px solid rgba(255,200,0,0.3);border-radius:16px;padding:20px;margin-bottom:25px">
+            <p><strong style="color:#FFD700"><i class="fas fa-info-circle"></i> Before you start:</strong> Make sure your Ubuntu VM is running in VirtualBox and you have a terminal open. All commands below can be copied and pasted directly.</p>
+        </div>
+
+        <!-- Lab 1 -->
+        <div class="lab-module">
+            <div class="lab-header"><span class="lab-num">Lab 1</span><h3>Installing & Checking UFW Status</h3></div>
+            <p style="font-size:14px;margin-bottom:16px">UFW (Uncomplicated Firewall) is pre-installed on Ubuntu. Let's verify it's available and check its current state.</p>
+
+            <div class="lab-step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <div class="step-desc">Check if UFW is installed</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo ufw version</div>
+                    <div class="expected-out">ufw 0.36.1<br>Copyright 2008-2021 Canonical Ltd.</div>
+                </div>
+            </div>
+            <div class="lab-step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <div class="step-desc">Check current firewall status</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo ufw status</div>
+                    <div class="expected-out">Status: inactive</div>
+                    <div class="step-note">💡 UFW is installed but disabled by default on a fresh Ubuntu install.</div>
+                </div>
+            </div>
+            <div class="lab-step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <div class="step-desc">Enable UFW</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo ufw enable</div>
+                    <div class="expected-out">Command may disrupt existing ssh connections. Proceed with operation (y|n)? y<br>Firewall is active and enabled on system startup</div>
+                    <div class="step-note">⚠️ In a real server, enabling UFW without allowing SSH first would lock you out! In VirtualBox this is safe.</div>
+                </div>
+            </div>
+            <div class="lab-step">
+                <div class="step-num">4</div>
+                <div class="step-body">
+                    <div class="step-desc">Verify it's now active</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo ufw status verbose</div>
+                    <div class="expected-out">Status: active<br>Logging: on (low)<br>Default: deny (incoming), allow (outgoing), disabled (routed)<br>New profiles: skip</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lab 2 -->
+        <div class="lab-module">
+            <div class="lab-header"><span class="lab-num">Lab 2</span><h3>Adding & Removing Rules</h3></div>
+            <p style="font-size:14px;margin-bottom:16px">Practice adding allow and deny rules for common services, then verify them.</p>
+
+            <div class="lab-step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <div class="step-desc">Allow incoming web traffic (HTTP + HTTPS)</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo ufw allow 80/tcp</div>
+                    <div class="expected-out">Rule added<br>Rule added (v6)</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)" style="margin-top:8px"><span class="copy-hint">click to copy</span>sudo ufw allow 443/tcp</div>
+                    <div class="expected-out">Rule added<br>Rule added (v6)</div>
+                </div>
+            </div>
+            <div class="lab-step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <div class="step-desc">Allow SSH — CRITICAL on remote servers</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo ufw allow 22/tcp</div>
+                    <div class="expected-out">Rule added<br>Rule added (v6)</div>
+                    <div class="step-note">💡 You can also use service names: <code>sudo ufw allow ssh</code> — UFW knows common service names.</div>
+                </div>
+            </div>
+            <div class="lab-step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <div class="step-desc">Block Telnet (insecure, should never be open)</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo ufw deny 23/tcp</div>
+                    <div class="expected-out">Rule added<br>Rule added (v6)</div>
+                </div>
+            </div>
+            <div class="lab-step">
+                <div class="step-num">4</div>
+                <div class="step-body">
+                    <div class="step-desc">View all current rules</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo ufw status numbered</div>
+                    <div class="expected-out">Status: active<br><br>     To                         Action      From<br>     --                         ------      ----<br>[ 1] 80/tcp                     ALLOW IN    Anywhere<br>[ 2] 443/tcp                    ALLOW IN    Anywhere<br>[ 3] 22/tcp                     ALLOW IN    Anywhere<br>[ 4] 23/tcp                     DENY IN     Anywhere<br>[ 5] 80/tcp (v6)                ALLOW IN    Anywhere (v6)<br>[ 6] 443/tcp (v6)               ALLOW IN    Anywhere (v6)</div>
+                </div>
+            </div>
+            <div class="lab-step">
+                <div class="step-num">5</div>
+                <div class="step-body">
+                    <div class="step-desc">Delete a rule by number (remove the Telnet deny)</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo ufw delete 4</div>
+                    <div class="expected-out">Deleting:<br> deny 23/tcp<br>Proceed with operation (y|n)? y<br>Rule deleted</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lab 3 -->
+        <div class="lab-module">
+            <div class="lab-header"><span class="lab-num">Lab 3</span><h3>IP-Based Rules & Rate Limiting</h3></div>
+            <p style="font-size:14px;margin-bottom:16px">Control traffic at the IP level — allow entire subnets, block specific attackers, and rate-limit brute-force attempts.</p>
+
+            <div class="lab-step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <div class="step-desc">Allow all traffic from your local network (LAN)</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo ufw allow from 192.168.1.0/24</div>
+                    <div class="expected-out">Rule added</div>
+                    <div class="step-note">💡 Replace 192.168.1.0/24 with your actual subnet. Check it with: <code>ip addr show</code></div>
+                </div>
+            </div>
+            <div class="lab-step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <div class="step-desc">Block a specific attacker IP</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo ufw deny from 10.10.10.5</div>
+                    <div class="expected-out">Rule added</div>
+                </div>
+            </div>
+            <div class="lab-step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <div class="step-desc">Rate-limit SSH to defend against brute-force (max 6 connections/30s per IP)</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo ufw limit ssh</div>
+                    <div class="expected-out">Rule updated<br>Rule updated (v6)</div>
+                    <div class="step-note">🔒 This is one of the most important UFW rules for any public-facing server. It auto-blocks IPs that try too many SSH connections.</div>
+                </div>
+            </div>
+            <div class="lab-step">
+                <div class="step-num">4</div>
+                <div class="step-body">
+                    <div class="step-desc">Allow a specific IP to access only port 5432 (PostgreSQL)</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo ufw allow from 192.168.1.50 to any port 5432</div>
+                    <div class="expected-out">Rule added</div>
+                    <div class="step-note">💡 This combines source IP restriction + port restriction — much more secure than opening a database port to the world.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lab 4 -->
+        <div class="lab-module">
+            <div class="lab-header"><span class="lab-num">Lab 4</span><h3>Logging & Monitoring</h3></div>
+            <p style="font-size:14px;margin-bottom:16px">See what UFW is actually blocking in real-time by enabling logging and reading the firewall log.</p>
+
+            <div class="lab-step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <div class="step-desc">Enable UFW logging at medium level</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo ufw logging medium</div>
+                    <div class="expected-out">Logging enabled</div>
+                </div>
+            </div>
+            <div class="lab-step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <div class="step-desc">Watch the firewall log in real-time</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo tail -f /var/log/ufw.log</div>
+                    <div class="expected-out">Mar 19 14:23:01 Ubuntu kernel: [UFW BLOCK] IN=enp0s3 OUT= MAC=... SRC=203.0.113.42 DST=10.0.2.15 LEN=44 TOS=0x00 PREC=0x00 TTL=115 ID=12345 PROTO=TCP SPT=54321 DPT=22 WINDOW=1024 RES=0x00 SYN URGP=0<br>Mar 19 14:23:04 Ubuntu kernel: [UFW ALLOW] IN=enp0s3 OUT= MAC=... SRC=192.168.1.5 DST=10.0.2.15 LEN=60 ... PROTO=TCP SPT=49832 DPT=80</div>
+                    <div class="step-note">💡 Press Ctrl+C to stop. Each [UFW BLOCK] line is a packet that was denied. SRC = attacker IP, DPT = destination port they tried to reach.</div>
+                </div>
+            </div>
+            <div class="lab-step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <div class="step-desc">Count how many times a port was blocked today</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo grep "UFW BLOCK" /var/log/ufw.log | grep "DPT=22" | wc -l</div>
+                    <div class="expected-out">47</div>
+                    <div class="step-note">💡 If this number is high, someone is scanning or brute-forcing your SSH port. Add: <code>sudo ufw limit ssh</code></div>
+                </div>
+            </div>
+            <div class="lab-step">
+                <div class="step-num">4</div>
+                <div class="step-body">
+                    <div class="step-desc">Reset UFW back to defaults (clean slate)</div>
+                    <div class="lab-cmd" onclick="copyCmd(this)"><span class="copy-hint">click to copy</span>sudo ufw reset</div>
+                    <div class="expected-out">Resetting all rules to installed defaults. Proceed with operation (y|n)? y<br>Backing up 'user.rules' to '/etc/ufw/user.rules.20240319_142301'<br>Backing up 'before.rules' to '/etc/ufw/before.rules.20240319_142301'<br>Firewall reset to defaults.</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="background:rgba(76,175,80,0.15);border:2px solid rgba(76,175,80,0.4);border-radius:16px;padding:20px;margin-top:10px">
+            <p><strong style="color:#4CAF50"><i class="fas fa-check-circle"></i> Lab Complete!</strong> You've learned how to install, configure, add rules, and monitor UFW on Ubuntu — the same firewall used in production Linux servers worldwide. Try combining these commands to build a realistic server ruleset.</p>
+        </div>
     </div>
 </section>
 </div>
@@ -701,6 +960,164 @@ for(let i=0;i<50;i++){const p=document.createElement('div');p.className='particl
 /* ─── Nav ─── */
 function showSection(id,el){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));document.getElementById(id).classList.add('active');el.classList.add('active');}
 function showSim(type,el){document.querySelectorAll('.sim-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.sim-content').forEach(c=>c.classList.remove('active'));el.classList.add('active');document.getElementById(type+'-sim').classList.add('active');}
+function showVmTab(tab,el){document.querySelectorAll('#vm-demo .sim-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('#vm-demo .sim-content').forEach(c=>c.classList.remove('active'));el.classList.add('active');document.getElementById('vm-'+tab).classList.add('active');}
+
+/* ═══════════════════════════
+   SIMULATED UFW TERMINAL
+═══════════════════════════ */
+let ufwEnabled=false;
+let ufwRules=[];
+let ufwLogging='low';
+let cmdHistory=[];
+let histIdx=-1;
+
+const ufwResponses={
+    'sudo ufw version':()=>'ufw 0.36.1\nCopyright 2008-2021 Canonical Ltd.',
+    'sudo ufw status':()=>ufwEnabled
+        ?('Status: active\n\n     To                         Action      From\n     --                         ------      ----\n'+
+          (ufwRules.length?ufwRules.map((r,i)=>`[ ${i+1}] ${r.to.padEnd(27)}${r.action.padEnd(12)}${r.from}`).join('\n'):'(no rules added)'))
+        :'Status: inactive',
+    'sudo ufw status verbose':()=>ufwEnabled
+        ?`Status: active\nLogging: on (${ufwLogging})\nDefault: deny (incoming), allow (outgoing), disabled (routed)\nNew profiles: skip\n\n     To                         Action      From\n     --                         ------      ----\n`+(ufwRules.length?ufwRules.map((r,i)=>`[ ${i+1}] ${r.to.padEnd(27)}${r.action.padEnd(12)}${r.from}`).join('\n'):'(no rules added)')
+        :'Status: inactive',
+    'sudo ufw status numbered':()=>{
+        if(!ufwEnabled) return 'Status: inactive';
+        const rows=ufwRules.map((r,i)=>`[ ${i+1}] ${r.to.padEnd(27)}${r.action.padEnd(12)}${r.from}`).join('\n');
+        return `Status: active\n\n     To                         Action      From\n     --                         ------      ----\n`+(rows||'(no rules added)');
+    },
+    'sudo ufw numbered':()=>ufwResponses['sudo ufw status numbered'](),
+    'sudo ufw enable':()=>{ufwEnabled=true;return'Command may disrupt existing ssh connections. Proceed with operation (y|n)? y\nFirewall is active and enabled on system startup';},
+    'sudo ufw disable':()=>{ufwEnabled=false;return'Firewall stopped and disabled on system startup';},
+    'sudo ufw reset':()=>{ufwEnabled=false;ufwRules=[];const ts=new Date().toISOString().replace(/[-:T]/g,'').slice(0,15);return`Resetting all rules to installed defaults. Proceed with operation (y|n)? y\nBacking up 'user.rules' to '/etc/ufw/user.rules.${ts}'\nBacking up 'before.rules' to '/etc/ufw/before.rules.${ts}'\nFirewall reset to defaults.`;},
+    'sudo ufw logging on':()=>{ufwLogging='low';return'Logging enabled';},
+    'sudo ufw logging off':()=>{ufwLogging='off';return'Logging disabled';},
+    'sudo ufw logging low':()=>{ufwLogging='low';return'Logging enabled';},
+    'sudo ufw logging medium':()=>{ufwLogging='medium';return'Logging enabled';},
+    'sudo ufw logging high':()=>{ufwLogging='high';return'Logging enabled';},
+    'help':()=>`Available UFW commands:\n  sudo ufw enable/disable      — turn firewall on/off\n  sudo ufw status [verbose]    — show status and rules\n  sudo ufw status numbered     — show rules with numbers\n  sudo ufw allow <port/proto>  — add allow rule\n  sudo ufw deny <port/proto>   — add deny rule\n  sudo ufw limit ssh           — rate-limit SSH\n  sudo ufw delete <num>        — delete rule by number\n  sudo ufw allow from <ip>     — allow entire IP\n  sudo ufw deny from <ip>      — block specific IP\n  sudo ufw logging on/medium   — enable logging\n  sudo ufw reset               — reset all rules\n  sudo ufw version             — show version`,
+};
+
+function parseUfwCmd(cmd){
+    const c=cmd.trim().toLowerCase();
+    // direct lookup
+    if(ufwResponses[c]) return{type:'success',text:ufwResponses[c]()};
+    // allow port
+    let m=c.match(/^sudo ufw (allow|deny) (\d+)(\/tcp|\/udp)?$/);
+    if(m){
+        const action=m[1].toUpperCase()+' IN';
+        const port=m[2]+(m[3]||'/tcp');
+        const portNames={'80/tcp':'80/tcp (HTTP)','443/tcp':'443/tcp (HTTPS)','22/tcp':'22/tcp (SSH)','21/tcp':'21/tcp (FTP)','23/tcp':'23/tcp (Telnet)','25/tcp':'25/tcp (SMTP)','3389/tcp':'3389/tcp (RDP)','53/udp':'53/udp (DNS)','3306/tcp':'3306/tcp (MySQL)','5432/tcp':'5432/tcp (PostgreSQL)'};
+        const label=portNames[port]||port;
+        ufwRules.push({to:label,action,from:'Anywhere'});
+        return{type:'success',text:'Rule added\nRule added (v6)'};
+    }
+    // allow/deny by service name
+    m=c.match(/^sudo ufw (allow|deny) (ssh|http|https|ftp|smtp|telnet|dns|mysql|postgresql)$/);
+    if(m){
+        const svc={ssh:'22/tcp',http:'80/tcp',https:'443/tcp',ftp:'21/tcp',smtp:'25/tcp',telnet:'23/tcp',dns:'53/udp',mysql:'3306/tcp',postgresql:'5432/tcp'};
+        const action=m[1].toUpperCase()+' IN';
+        ufwRules.push({to:svc[m[2]]||m[2],action,from:'Anywhere'});
+        return{type:'success',text:'Rule updated\nRule updated (v6)'};
+    }
+    // limit ssh
+    m=c.match(/^sudo ufw limit (ssh|\d+\/tcp)$/);
+    if(m){
+        const port=m[1]==='ssh'?'22/tcp':m[1];
+        ufwRules=ufwRules.filter(r=>r.to!==port);
+        ufwRules.push({to:port,action:'LIMIT IN',from:'Anywhere'});
+        return{type:'success',text:'Rule updated\nRule updated (v6)'};
+    }
+    // allow/deny from IP
+    m=c.match(/^sudo ufw (allow|deny) from ([\d./]+)$/);
+    if(m){
+        const action=m[1].toUpperCase()+' IN';
+        ufwRules.push({to:'Anywhere',action,from:m[2]});
+        return{type:'success',text:'Rule added'};
+    }
+    // allow from IP to port
+    m=c.match(/^sudo ufw (allow|deny) from ([\d./]+) to any port (\d+)$/);
+    if(m){
+        const action=m[1].toUpperCase()+' IN';
+        ufwRules.push({to:m[3]+'/tcp',action,from:m[2]});
+        return{type:'success',text:'Rule added'};
+    }
+    // delete by number
+    m=c.match(/^sudo ufw delete (\d+)$/);
+    if(m){
+        const idx=parseInt(m[1])-1;
+        if(idx<0||idx>=ufwRules.length) return{type:'err',text:'ERROR: Invalid rule number'};
+        const rule=ufwRules[idx];
+        ufwRules.splice(idx,1);
+        return{type:'success',text:`Deleting:\n ${rule.action.toLowerCase()} ${rule.to}\nProceed with operation (y|n)? y\nRule deleted`};
+    }
+    // tail ufw.log simulation
+    if(c.includes('tail')&&c.includes('ufw.log')){
+        const now=new Date();
+        const ts=now.toLocaleDateString('en-US',{month:'short',day:'2-digit'}).replace(',',' ')+' '+now.toLocaleTimeString();
+        return{type:'success',text:`${ts} Ubuntu kernel: [UFW BLOCK] IN=enp0s3 OUT= SRC=203.0.113.42 DST=10.0.2.15 PROTO=TCP SPT=54321 DPT=22 SYN\n${ts} Ubuntu kernel: [UFW ALLOW] IN=enp0s3 OUT= SRC=192.168.1.5 DST=10.0.2.15 PROTO=TCP SPT=49832 DPT=80\n${ts} Ubuntu kernel: [UFW BLOCK] IN=enp0s3 OUT= SRC=45.33.32.156 DST=10.0.2.15 PROTO=TCP SPT=12983 DPT=3389 SYN\n\n(Simulated output — press Ctrl+C in real terminal to exit)`};
+    }
+    // grep ufw log
+    if(c.includes('grep')&&c.includes('ufw')) return{type:'success',text:'47'};
+    // ip addr
+    if(c==='ip addr show'||c==='ip addr'||c==='ifconfig') return{type:'success',text:'2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP>\n    inet 10.0.2.15/24 brd 10.0.2.255 scope global enp0s3\n    inet6 fe80::a00:27ff:fe12:3456/64 scope link'};
+    // sudo commands that aren't ufw
+    if(c.startsWith('sudo')&&!c.startsWith('sudo ufw')) return{type:'err',text:`sudo: ${cmd.split(' ')[1]}: command not found in this simulation`};
+    // empty
+    if(!cmd.trim()) return null;
+    return{type:'err',text:`bash: ${cmd.split(' ')[0]}: command not found\nTry 'help' to see available UFW commands`};
+}
+
+function termPrint(html){
+    const out=document.getElementById('term-output');
+    const div=document.createElement('div');
+    div.className='term-line';div.innerHTML=html;
+    out.appendChild(div);
+    out.scrollTop=out.scrollHeight;
+}
+
+function runCmd(cmd){
+    const inp=document.getElementById('term-input');
+    inp.value=cmd;
+    executeCmd(cmd);
+    inp.value='';
+    inp.focus();
+}
+
+function executeCmd(cmd){
+    if(cmd.trim()) cmdHistory.unshift(cmd);
+    histIdx=-1;
+    termPrint(`<span class="term-prompt">vboxuser@Ubuntu:~$</span> <span class="term-cmd">${escHtml(cmd)}</span>`);
+    if(!cmd.trim()) return;
+    const res=parseUfwCmd(cmd);
+    if(!res) return;
+    if(res.type==='success') termPrint(`<span class="${res.text.includes('active')||res.text.includes('added')||res.text.includes('enabled')||res.text.includes('updated')||res.text.includes('deleted')||res.text.includes('startup')?'term-success':'term-out'}">${escHtml(res.text)}</span>`);
+    else termPrint(`<span class="term-err">${escHtml(res.text)}</span>`);
+}
+
+function handleTermKey(e){
+    const inp=e.target;
+    if(e.key==='Enter'){executeCmd(inp.value);inp.value='';}
+    else if(e.key==='ArrowUp'){e.preventDefault();if(histIdx<cmdHistory.length-1){histIdx++;inp.value=cmdHistory[histIdx]||'';}}
+    else if(e.key==='ArrowDown'){e.preventDefault();if(histIdx>0){histIdx--;inp.value=cmdHistory[histIdx]||'';}else{histIdx=-1;inp.value='';}}
+}
+
+function escHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+
+function copyCmd(el){
+    const txt=el.textContent.replace('click to copy','').trim();
+    navigator.clipboard.writeText(txt).catch(()=>{});
+    el.classList.add('copied-flash');
+    const hint=el.querySelector('.copy-hint');
+    if(hint){const old=hint.textContent;hint.textContent='✓ copied!';setTimeout(()=>{hint.textContent=old;el.classList.remove('copied-flash');},1200);}
+}
+
+// Boot message
+window.addEventListener('DOMContentLoaded',()=>{
+    termPrint('<span class="term-info">FireViz UFW Simulator — Ubuntu 22.04 LTS</span>');
+    termPrint('<span class="term-out">To run a command as administrator (user "root"), use "sudo &lt;command&gt;".</span>');
+    termPrint('<span class="term-out">Type <span style="color:#FFD700">help</span> to see available commands, or click a Quick Command button below.</span>');
+    termPrint('');
+});
 function resetLearning(){if(confirm('Reset all progress?'))location.reload();}
 
 /* ─── Module unlock ─── */
